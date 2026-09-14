@@ -18,15 +18,13 @@ from backend.models import (  # noqa: F401 — ensure all models are imported fo
 )
 from backend.database import Base
 from backend.routers.health import router as health_router
-from backend.routers import (
-    shipments_router,
-    disruptions_router,
-    fleet_router,
-    recommendations_router,
-    audit_router,
-    carriers_router,
-    routes_router,
-)
+from backend.routers.shipments import router as shipments_router
+from backend.routers.disruptions import router as disruptions_router
+from backend.routers.fleet import router as fleet_router
+from backend.routers.recommendations import router as recommendations_router
+from backend.routers.simulation import router as simulation_router
+from backend.routers.audit import router as audit_router
+from backend.routers.reference import carriers_router, routes_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -73,7 +71,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="SupplyChainOS",
         description="AI-Powered Supply Chain Resilience & Digital Twin Control Tower",
-        version="1.0.0",
+        version="2.0.0",
         lifespan=lifespan,
     )
 
@@ -106,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(disruptions_router, prefix=PREFIX)
     app.include_router(fleet_router, prefix=PREFIX)
     app.include_router(recommendations_router, prefix=PREFIX)
+    app.include_router(simulation_router, prefix=PREFIX)
     app.include_router(audit_router, prefix=PREFIX)
     app.include_router(carriers_router, prefix=PREFIX)
     app.include_router(routes_router, prefix=PREFIX)
@@ -114,7 +113,7 @@ def create_app() -> FastAPI:
     async def root() -> dict:
         return {
             "service": "SupplyChainOS",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "docs": "/docs",
             "health": "/api/v1/health",
         }

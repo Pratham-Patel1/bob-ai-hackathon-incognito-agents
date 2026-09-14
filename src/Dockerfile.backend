@@ -15,10 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source
 COPY backend/ ./backend/
 
-# ── Phase 2: ML artifacts ──────────────────────────────────────────────────
-# Uncomment the line below once src/ml/artifacts/risk_model.joblib exists.
-# The ml/ directory must be inside the build context (src/) for this to work.
-# COPY ml/artifacts/ ./ml/artifacts/
+# ML pipeline files (features.py needed for inference) + pre-trained artifact
+COPY ml/features.py ./ml/features.py
+COPY ml/artifacts/ ./ml/artifacts/
 
 # Set Python path so 'backend' package is importable
 ENV PYTHONPATH=/app
