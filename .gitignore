@@ -94,3 +94,7 @@ logs/
 .terraform/
 *.tfstate
 *.tfstate.backup
+
+# ── Project Internal Documents ────────────────────────────────────────────────
+L2_Project_Repository_Architecture_and_Team_Ownership.md
+L2_Project_Repo*
