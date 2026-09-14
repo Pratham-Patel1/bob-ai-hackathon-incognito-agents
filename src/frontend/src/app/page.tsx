@@ -9,6 +9,7 @@ import SimulationStudio from "../components/SimulationStudio";
 import RecommendationsPanel from "../components/RecommendationsPanel";
 import AuditLogTable from "../components/AuditLogTable";
 import FleetPanel from "../components/FleetPanel";
+import { AlertTriangle, ArrowRight } from "lucide-react";
 
 import {
   Shipment,
@@ -166,7 +167,7 @@ export default function ControlTowerHome() {
             />
           </div>
 
-          {/* Right Column: Pharma Reroute Action & Cold Chain Monitor */}
+          {/* Right Column: Pharma Reroute Action & Live Corridor Threat Intel */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <RecommendationsPanel
               recommendations={recommendations}
@@ -176,10 +177,101 @@ export default function ControlTowerHome() {
               onRecommendationUpdated={loadData}
             />
 
-            <ColdChainMonitor
-              shipments={shipments}
-              onTriggerReeferSwap={() => setActiveTab("recommendations")}
-            />
+            {/* Active Corridor Disruptions Threat Intel Feed */}
+            <div className="glass-panel" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      background: "rgba(244, 63, 94, 0.15)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--accent-rose)",
+                    }}
+                  >
+                    <AlertTriangle size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "-0.01em" }}>
+                      Active Corridor Threat Intel
+                    </h3>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                      Live atmospheric & infrastructure telemetry affecting active freight lanes
+                    </p>
+                  </div>
+                </div>
+                <span className="badge badge-rose">
+                  {disruptions.filter((d) => d.status === "active").length} Active Alerts
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {disruptions.slice(0, 3).map((d) => {
+                  const isCritical = d.severity === "critical";
+                  return (
+                    <div
+                      key={d.id}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: "10px",
+                        background: "rgba(14, 20, 36, 0.6)",
+                        border: isCritical ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid var(--border-subtle)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className={`badge ${isCritical ? "badge-rose" : "badge-amber"}`} style={{ fontSize: "10px", padding: "2px 8px" }}>
+                            {d.severity.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-main)" }}>
+                            {d.title}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "11px", color: isCritical ? "var(--accent-rose)" : "var(--accent-amber)", fontWeight: 700 }}>
+                          +{d.estimated_delay_hours}h Delay
+                        </span>
+                      </div>
+
+                      <p style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.4 }}>
+                        {d.description}
+                      </p>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-faint)" }}>
+                          Blast Radius: <strong style={{ color: "var(--text-muted)" }}>{d.affected_radius_km} km</strong>
+                        </span>
+                        <button
+                          onClick={() => {
+                            const matchShipment = shipments.find((s) => s.status === "at_risk" || s.status === "delayed") || shipments[0];
+                            if (matchShipment) handleSimulateFromMap(matchShipment);
+                          }}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "var(--accent-cyan)",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          Simulate Response <ArrowRight size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
