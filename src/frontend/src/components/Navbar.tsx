@@ -8,9 +8,11 @@ import {
   Cpu,
   History,
   Layers,
+  Plus,
   RefreshCw,
   ShieldCheck,
   Truck,
+  Zap,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -21,6 +23,8 @@ interface NavbarProps {
   pendingRecsCount: number;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onOpenInjectDisruption?: () => void;
+  onOpenAssessShipment?: () => void;
 }
 
 export default function Navbar({
@@ -31,6 +35,8 @@ export default function Navbar({
   pendingRecsCount,
   onRefresh,
   isRefreshing,
+  onOpenInjectDisruption,
+  onOpenAssessShipment,
 }: NavbarProps) {
   const navTabs = [
     { id: "overview", label: "Control Tower", icon: Compass },
@@ -135,8 +141,56 @@ export default function Navbar({
         })}
       </nav>
 
-      {/* 3. Right: Subtle Live Status & Sync */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px", justifyContent: "flex-end" }}>
+      {/* 3. Right: Interactive Actions & Status */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end" }}>
+        {onOpenAssessShipment && (
+          <button
+            onClick={onOpenAssessShipment}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "5px 11px",
+              borderRadius: "7px",
+              background: "rgba(0, 242, 254, 0.08)",
+              border: "1px solid rgba(0, 242, 254, 0.3)",
+              color: "var(--accent-cyan)",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            title="Evaluate custom shipment risk using client-side ML"
+          >
+            <Plus size={13} />
+            <span>Assess Risk</span>
+          </button>
+        )}
+
+        {onOpenInjectDisruption && (
+          <button
+            onClick={onOpenInjectDisruption}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "5px 11px",
+              borderRadius: "7px",
+              background: "rgba(244, 63, 94, 0.12)",
+              border: "1px solid rgba(244, 63, 94, 0.35)",
+              color: "var(--accent-rose)",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            title="Simulate a real-time disruption event and watch the AI react"
+          >
+            <Zap size={13} />
+            <span>Inject Threat</span>
+          </button>
+        )}
+
         {activeDisruptionsCount > 0 && (
           <div
             title={`${activeDisruptionsCount} active disruption events`}

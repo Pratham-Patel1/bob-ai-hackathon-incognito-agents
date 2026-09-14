@@ -9,6 +9,8 @@ import SimulationStudio from "../components/SimulationStudio";
 import RecommendationsPanel from "../components/RecommendationsPanel";
 import AuditLogTable from "../components/AuditLogTable";
 import FleetPanel from "../components/FleetPanel";
+import InjectDisruptionModal from "../components/InjectDisruptionModal";
+import AssessShipmentModal from "../components/AssessShipmentModal";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 
 import {
@@ -55,6 +57,74 @@ export default function ControlTowerHome() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>(MOCK_RECOMMENDATIONS);
   const [auditLogs, setAuditLogs] = useState<DecisionAudit[]>(MOCK_AUDIT_LOGS);
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(MOCK_SHIPMENTS[0]);
+  const [isInjectModalOpen, setIsInjectModalOpen] = useState<boolean>(false);
+  const [isAssessModalOpen, setIsAssessModalOpen] = useState<boolean>(false);
+
+  const handleInjectDisruption = (newDisruption: Disruption) => {
+    setDisruptions((prev) => [newDisruption, ...prev]);
+
+    // Haversine calculation to detect intersecting shipments
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const calcDistKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    let matchedShipment: Shipment | null = null;
+    setShipments((prev) =>
+      prev.map((s) => {
+        const d = calcDistKm(s.current_lat, s.current_lng, newDisruption.latitude, newDisruption.longitude);
+        if (d <= newDisruption.affected_radius_km * 1.6) {
+          if (!matchedShipment) matchedShipment = s;
+          return {
+            ...s,
+            status: "at_risk" as const,
+            risk_score: Math.min(99, s.risk_score + 35),
+            risk_level: "critical" as const,
+          };
+        }
+        return s;
+      })
+    );
+
+    const targetShipment = matchedShipment || shipments[0];
+    const newRec: Recommendation = {
+      id: `rec-${Date.now().toString().slice(-4)}`,
+      shipment_id: targetShipment?.id || "ship-eval",
+      disruption_id: newDisruption.id,
+      type: "reroute",
+      priority: newDisruption.severity === "critical" ? "critical" : "high",
+      title: `Reroute — Bypass ${newDisruption.title}`,
+      description: `${newDisruption.description} Autonomous routing engine drafted dynamic bypass corridor.`,
+      reason: `Geospatial blast radius (${newDisruption.affected_radius_km}km) collides with active transit corridor.`,
+      reasoning_factors: [
+        `Avoids ${newDisruption.affected_radius_km}km critical hazard perimeter`,
+        `Mitigates +${newDisruption.estimated_delay_hours}h bottleneck transit penalty`,
+        `Pre-cleared with regional intermodal carrier partner`,
+        `Preserves customer SLA contract milestones`,
+      ],
+      estimated_savings_usd: Math.round(newDisruption.affected_radius_km * 480 + newDisruption.estimated_delay_hours * 2500),
+      estimated_delay_reduction_hours: Number((newDisruption.estimated_delay_hours * 0.8).toFixed(1)),
+      requires_approval: true,
+      status: "pending",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setRecommendations((prev) => [newRec, ...prev]);
+    setActiveTab("overview");
+  };
+
+  const handleDeployShipment = (newShipment: Shipment) => {
+    setShipments((prev) => [newShipment, ...prev]);
+    setSelectedShipment(newShipment);
+    setActiveTab("overview");
+  };
 
   const loadData = async () => {
     setIsRefreshing(true);
@@ -126,6 +196,8 @@ export default function ControlTowerHome() {
         pendingRecsCount={recommendations.filter((r) => r.status === "pending").length}
         onRefresh={loadData}
         isRefreshing={isRefreshing}
+        onOpenInjectDisruption={() => setIsInjectModalOpen(true)}
+        onOpenAssessShipment={() => setIsAssessModalOpen(true)}
       />
 
       {/* 2. Focused Executive Metrics (4 Balanced Cards) */}
@@ -304,6 +376,19 @@ export default function ControlTowerHome() {
       {activeTab === "audit" && (
         <AuditLogTable logs={auditLogs} />
       )}
+
+      {/* Interactive Modals for Evaluators / Users */}
+      <InjectDisruptionModal
+        isOpen={isInjectModalOpen}
+        onClose={() => setIsInjectModalOpen(false)}
+        onInjectDisruption={handleInjectDisruption}
+      />
+
+      <AssessShipmentModal
+        isOpen={isAssessModalOpen}
+        onClose={() => setIsAssessModalOpen(false)}
+        onDeployShipment={handleDeployShipment}
+      />
     </main>
   );
 }
