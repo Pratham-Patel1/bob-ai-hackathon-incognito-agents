@@ -22,6 +22,7 @@ from backend.routers import (
     shipments_router,
     disruptions_router,
     fleet_router,
+    simulations_router,
     recommendations_router,
     audit_router,
     carriers_router,
@@ -105,6 +106,7 @@ def create_app() -> FastAPI:
     app.include_router(shipments_router, prefix=PREFIX)
     app.include_router(disruptions_router, prefix=PREFIX)
     app.include_router(fleet_router, prefix=PREFIX)
+    app.include_router(simulations_router, prefix=PREFIX)
     app.include_router(recommendations_router, prefix=PREFIX)
     app.include_router(audit_router, prefix=PREFIX)
     app.include_router(carriers_router, prefix=PREFIX)

@@ -16,7 +16,7 @@ class RecommendationBase(BaseModel):
     title: str
     description: str | None = None
     reason: str
-    reasoning_factors: list[dict[str, Any]] | None = None
+    reasoning_factors: list[Any] | None = None
     alternative_route_id: uuid.UUID | None = None
     alternative_carrier_id: uuid.UUID | None = None
     estimated_savings_usd: float | None = None
