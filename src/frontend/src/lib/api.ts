@@ -11,6 +11,11 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+export function formatCurrency(amount: number): string {
+  if (amount == null) return "$0";
+  return "$" + Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // ── Mock Fallbacks for Immediate Interactive Demo ─────────────────────────────
 export const MOCK_SHIPMENTS: Shipment[] = [
   {
@@ -26,9 +31,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
     current_lat: 51.3127,
     current_lng: 9.4797,
     status: "at_risk",
-    scheduled_departure: new Date(Date.now() - 4 * 3600000).toISOString(),
-    scheduled_arrival: new Date(Date.now() + 3 * 3600000).toISOString(),
-    estimated_arrival: new Date(Date.now() + 7 * 3600000).toISOString(),
+    scheduled_departure: "2026-09-14T08:00:00Z",
+    scheduled_arrival: "2026-09-14T15:00:00Z",
+    estimated_arrival: "2026-09-14T19:00:00Z",
     cargo_type: "temperature_sensitive",
     cargo_value_usd: 185000,
     weight_kg: 4200,
@@ -63,9 +68,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
     current_lat: 50.0782,
     current_lng: 8.243,
     status: "delayed",
-    scheduled_departure: new Date(Date.now() - 8 * 3600000).toISOString(),
-    scheduled_arrival: new Date(Date.now() + 2 * 3600000).toISOString(),
-    estimated_arrival: new Date(Date.now() + 10 * 3600000).toISOString(),
+    scheduled_departure: "2026-09-14T04:00:00Z",
+    scheduled_arrival: "2026-09-14T14:00:00Z",
+    estimated_arrival: "2026-09-14T22:00:00Z",
     cargo_type: "automotive_parts",
     cargo_value_usd: 320000,
     weight_kg: 14500,
@@ -98,9 +103,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
     current_lat: 50.6292,
     current_lng: 3.0573,
     status: "in_transit",
-    scheduled_departure: new Date(Date.now() - 2 * 3600000).toISOString(),
-    scheduled_arrival: new Date(Date.now() + 2.5 * 3600000).toISOString(),
-    estimated_arrival: new Date(Date.now() + 2.5 * 3600000).toISOString(),
+    scheduled_departure: "2026-09-14T10:00:00Z",
+    scheduled_arrival: "2026-09-14T14:30:00Z",
+    estimated_arrival: "2026-09-14T14:30:00Z",
     cargo_type: "electronics",
     cargo_value_usd: 450000,
     weight_kg: 3200,
@@ -133,9 +138,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
     current_lat: 51.47,
     current_lng: -0.4543,
     status: "in_transit",
-    scheduled_departure: new Date().toISOString(),
-    scheduled_arrival: new Date(Date.now() + 3 * 3600000).toISOString(),
-    estimated_arrival: new Date(Date.now() + 3 * 3600000).toISOString(),
+    scheduled_departure: "2026-09-14T12:00:00Z",
+    scheduled_arrival: "2026-09-14T15:00:00Z",
+    estimated_arrival: "2026-09-14T15:00:00Z",
     cargo_type: "biomedical_vaccines",
     cargo_value_usd: 890000,
     weight_kg: 850,
@@ -171,7 +176,7 @@ export const MOCK_DISRUPTIONS: Disruption[] = [
     status: "active",
     description: "Hurricane-force gusts and storm surge halting North Sea feeder vessels and northern freight lanes.",
     estimated_delay_hours: 14.0,
-    reported_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    reported_at: "2026-09-14T09:00:00Z",
   },
   {
     id: "d-02",
@@ -184,7 +189,7 @@ export const MOCK_DISRUPTIONS: Disruption[] = [
     status: "active",
     description: "Signaling hardware malfunction halting south-bound rail freight corridors across the Rhine valley.",
     estimated_delay_hours: 8.0,
-    reported_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+    reported_at: "2026-09-14T10:00:00Z",
   },
   {
     id: "d-03",
@@ -197,7 +202,7 @@ export const MOCK_DISRUPTIONS: Disruption[] = [
     status: "active",
     description: "Typhoon outer bands forcing vessel holding outside Yangshan deep-water container terminal.",
     estimated_delay_hours: 24.0,
-    reported_at: new Date(Date.now() - 12 * 3600000).toISOString(),
+    reported_at: "2026-09-14T00:00:00Z",
   },
 ];
 
@@ -298,8 +303,8 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     estimated_delay_reduction_hours: 9.5,
     requires_approval: true,
     status: "pending",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: "2026-09-14T11:00:00Z",
+    updated_at: "2026-09-14T11:00:00Z",
   },
   {
     id: "rec-02",
@@ -319,8 +324,8 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     estimated_delay_reduction_hours: 6.0,
     requires_approval: true,
     status: "pending",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: "2026-09-14T11:15:00Z",
+    updated_at: "2026-09-14T11:15:00Z",
   },
 ];
 
@@ -335,7 +340,7 @@ export const MOCK_AUDIT_LOGS: DecisionAudit[] = [
     reasoning: "Approved alternative route RT-01 avoiding gale storm based on digital twin simulation.",
     previous_state: { status: "pending" },
     new_state: { status: "approved", approved_by: "IBM Bob Copilot" },
-    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
+    timestamp: "2026-09-14T11:30:00Z",
   },
   {
     id: "aud-02",
@@ -347,7 +352,7 @@ export const MOCK_AUDIT_LOGS: DecisionAudit[] = [
     reasoning: "Risk score escalated from 45.0 to 78.5 due to storm proximity and cold chain deviation.",
     previous_state: { risk_level: "medium", risk_score: 45.0 },
     new_state: { risk_level: "high", risk_score: 78.5 },
-    timestamp: new Date(Date.now() - 90 * 60000).toISOString(),
+    timestamp: "2026-09-14T10:45:00Z",
   },
 ];
 

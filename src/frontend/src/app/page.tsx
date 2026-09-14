@@ -33,6 +33,7 @@ import {
 } from "../lib/api";
 
 export default function ControlTowerHome() {
+  const [mounted, setMounted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isLive, setIsLive] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -77,30 +78,45 @@ export default function ControlTowerHome() {
       if (sRes.shipments.length > 0) {
         setSelectedShipment(sRes.shipments[0]);
       }
-    } catch (err) {
-      console.warn("Using offline fallback data");
+    } catch {
+      // Offline fallback
     } finally {
       setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
+    setMounted(true);
     loadData();
   }, []);
+
+  // Hydration protection
+  if (!mounted) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#080c14",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ color: "var(--accent-cyan)", fontSize: "14px", fontWeight: 600, letterSpacing: "0.05em" }}>
+          Initializing SupplyChainOS Control Tower...
+        </div>
+      </div>
+    );
+  }
 
   const handleSimulateFromMap = (s: Shipment) => {
     setSelectedShipment(s);
     setActiveTab("simulation");
   };
 
-  const handleTriggerReeferSwap = (s: Shipment) => {
-    setSelectedShipment(s);
-    setActiveTab("recommendations");
-  };
-
   return (
-    <main style={{ minHeight: "100vh", paddingBottom: "40px" }}>
-      {/* Top Header Navigation */}
+    <main style={{ minHeight: "100vh", paddingBottom: "30px" }}>
+      {/* 1. Sleek Navigation Header */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -111,7 +127,7 @@ export default function ControlTowerHome() {
         isRefreshing={isRefreshing}
       />
 
-      {/* KPI Metrics Strip */}
+      {/* 2. Focused Executive Metrics (4 Balanced Cards) */}
       <KpiMetrics
         shipments={shipments}
         disruptions={disruptions}
@@ -120,27 +136,35 @@ export default function ControlTowerHome() {
         onFilterAtRisk={() => setActiveTab("overview")}
       />
 
-      {/* Tab View Routing */}
+      {/* 3. Main Body Content */}
       {activeTab === "overview" && (
-        <>
-          <ControlTowerMap
-            shipments={shipments}
-            disruptions={disruptions}
-            selectedShipment={selectedShipment}
-            onSelectShipment={setSelectedShipment}
-            onSimulateShipment={handleSimulateFromMap}
-          />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "0px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.6fr 1fr",
+            gap: "16px",
+            margin: "0 20px",
+          }}
+        >
+          {/* Left Column: Digital Twin Map */}
+          <div>
+            <ControlTowerMap
+              shipments={shipments}
+              disruptions={disruptions}
+              selectedShipment={selectedShipment}
+              onSelectShipment={setSelectedShipment}
+              onSimulateShipment={handleSimulateFromMap}
+            />
+          </div>
+
+          {/* Right Column: AI Action Gate & Approvals */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <RecommendationsPanel
               recommendations={recommendations}
               onRecommendationUpdated={loadData}
             />
-            <ColdChainMonitor
-              shipments={shipments}
-              onTriggerReeferSwap={handleTriggerReeferSwap}
-            />
           </div>
-        </>
+        </div>
       )}
 
       {activeTab === "simulation" && (
@@ -153,7 +177,7 @@ export default function ControlTowerHome() {
       {activeTab === "coldchain" && (
         <ColdChainMonitor
           shipments={shipments}
-          onTriggerReeferSwap={handleTriggerReeferSwap}
+          onTriggerReeferSwap={() => setActiveTab("recommendations")}
         />
       )}
 

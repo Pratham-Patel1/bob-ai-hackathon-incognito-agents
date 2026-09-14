@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   AlertTriangle,
-  ArrowRight,
   Compass,
   ExternalLink,
   MapPin,
-  Maximize2,
   Navigation,
   ShieldAlert,
-  Thermometer,
+  Snowflake,
   Truck,
   Zap,
 } from "lucide-react";
 import { Shipment, Disruption } from "../lib/types";
+import { formatCurrency } from "../lib/api";
 
 interface ControlTowerMapProps {
   shipments: Shipment[];
@@ -31,18 +30,16 @@ export default function ControlTowerMap({
   onSelectShipment,
   onSimulateShipment,
 }: ControlTowerMapProps) {
-  // Map viewport bounds (focused on Europe corridor approx: 45°N to 57°N, -5°E to 18°E)
-  const MIN_LAT = 45.0;
-  const MAX_LAT = 57.0;
-  const MIN_LNG = -5.0;
-  const MAX_LNG = 18.0;
+  // Map viewport bounds (Europe corridor: 46°N to 56°N, -2°E to 16°E)
+  const MIN_LAT = 46.0;
+  const MAX_LAT = 56.0;
+  const MIN_LNG = -2.0;
+  const MAX_LNG = 16.0;
 
-  // Convert lat/lng to SVG coordinate percentage (0-100%)
-  const toX = (lng: number) => Math.max(5, Math.min(95, ((lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * 100));
-  const toY = (lat: number) => Math.max(5, Math.min(95, (1 - (lat - MIN_LAT) / (MAX_LAT - MIN_LAT)) * 100));
+  const toX = (lng: number) => Math.max(6, Math.min(94, ((lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * 100));
+  const toY = (lat: number) => Math.max(6, Math.min(94, (1 - (lat - MIN_LAT) / (MAX_LAT - MIN_LAT)) * 100));
 
-  // Cities anchor points for visual reference
-  const REFERENCE_CITIES = [
+  const HUBS = [
     { name: "Hamburg", lat: 53.55, lng: 9.99 },
     { name: "Frankfurt", lat: 50.11, lng: 8.68 },
     { name: "Rotterdam", lat: 51.92, lng: 4.48 },
@@ -52,93 +49,84 @@ export default function ControlTowerMap({
     { name: "Paris", lat: 48.86, lng: 2.35 },
     { name: "London", lat: 51.51, lng: -0.13 },
     { name: "Amsterdam", lat: 52.37, lng: 4.9 },
-    { name: "Milan", lat: 45.46, lng: 9.19 },
   ];
 
   return (
-    <div className="glass-panel" style={{ margin: "0 20px 20px 20px", overflow: "hidden", position: "relative" }}>
-      {/* Map Header Toolbar */}
+    <div className="glass-panel" style={{ overflow: "hidden", position: "relative" }}>
+      {/* Top Bar */}
       <div
         style={{
-          padding: "14px 20px",
+          padding: "10px 18px",
           borderBottom: "1px solid var(--border-subtle)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: "10px",
           background: "rgba(11, 15, 25, 0.4)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Compass size={18} color="var(--accent-cyan)" />
-          <h2 style={{ fontSize: "15px", fontWeight: 600 }}>
-            Geospatial Digital Twin & Disruption Corridor
-          </h2>
-          <span className="badge badge-cyan" style={{ fontSize: "10px" }}>
-            Live Telemetry • Multi-Modal
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Compass size={15} color="var(--accent-cyan)" />
+          <span style={{ fontSize: "13px", fontWeight: 600 }}>
+            Geospatial Freight Corridors & Blast-Radius Detection
           </span>
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "11px", color: "var(--text-muted)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-rose)" }} />
-            <span>At Risk Cargo</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", fontSize: "11px", color: "var(--text-muted)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent-rose)" }} />
+            <span>At-Risk Lane</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-emerald)" }} />
-            <span>On Schedule</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent-emerald)" }} />
+            <span>Clear Corridor</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <span
               style={{
-                width: "12px",
-                height: "12px",
+                width: "10px",
+                height: "10px",
                 borderRadius: "50%",
                 border: "1px dashed var(--accent-rose)",
-                background: "rgba(244, 63, 94, 0.2)",
+                background: "rgba(244, 63, 94, 0.15)",
               }}
             />
-            <span>Blast Radius Zone</span>
+            <span>Storm Zone</span>
           </div>
         </div>
       </div>
 
-      {/* Main Map Canvas Area */}
-      <div style={{ position: "relative", height: "480px", width: "100%", background: "#050811" }}>
-        {/* Subtle coordinate grid lines */}
-        <svg
-          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-        >
+      {/* Map Canvas */}
+      <div style={{ position: "relative", height: "390px", width: "100%", background: "#060913" }}>
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.025)" strokeWidth="1" />
+            <pattern id="grid-dots" width="30" height="30" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" fill="rgba(255, 255, 255, 0.04)" />
             </pattern>
-            <radialGradient id="storm-gradient">
-              <stop offset="0%" stopColor="rgba(244, 63, 94, 0.45)" />
-              <stop offset="70%" stopColor="rgba(244, 63, 94, 0.15)" />
+            <radialGradient id="storm-glow">
+              <stop offset="0%" stopColor="rgba(244, 63, 94, 0.35)" />
+              <stop offset="60%" stopColor="rgba(244, 63, 94, 0.12)" />
               <stop offset="100%" stopColor="rgba(244, 63, 94, 0.0)" />
             </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <rect width="100%" height="100%" fill="url(#grid-dots)" />
 
           {/* Reference cities hubs */}
-          {REFERENCE_CITIES.map((c) => {
+          {HUBS.map((c) => {
             const cx = `${toX(c.lng)}%`;
             const cy = `${toY(c.lat)}%`;
             return (
               <g key={c.name}>
-                <circle cx={cx} cy={cy} r="3" fill="#334155" />
+                <circle cx={cx} cy={cy} r="2.5" fill="#475569" />
                 <text
                   x={cx}
                   y={cy}
-                  dy="-8"
+                  dy="-6"
                   textAnchor="middle"
                   fill="#64748b"
-                  fontSize="10"
+                  fontSize="9"
                   fontFamily="Inter"
-                  fontWeight="500"
                 >
                   {c.name}
                 </text>
@@ -146,23 +134,23 @@ export default function ControlTowerMap({
             );
           })}
 
-          {/* Disruption Blast Radius Circles */}
+          {/* Disruption Radius Circles */}
           {disruptions.map((d) => {
             const cx = `${toX(d.longitude)}%`;
             const cy = `${toY(d.latitude)}%`;
-            const r = Math.min(120, Math.max(35, d.affected_radius_km * 0.4));
+            const r = Math.min(100, Math.max(30, d.affected_radius_km * 0.32));
             return (
               <g key={d.id}>
                 <circle
                   cx={cx}
                   cy={cy}
                   r={r}
-                  fill="url(#storm-gradient)"
-                  stroke="rgba(244, 63, 94, 0.6)"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
+                  fill="url(#storm-glow)"
+                  stroke="rgba(244, 63, 94, 0.5)"
+                  strokeWidth="1.2"
+                  strokeDasharray="3 3"
                 />
-                <circle cx={cx} cy={cy} r="5" fill="var(--accent-rose)" />
+                <circle cx={cx} cy={cy} r="4" fill="var(--accent-rose)" />
               </g>
             );
           })}
@@ -176,26 +164,24 @@ export default function ControlTowerMap({
             const isAtRisk = s.status === "at_risk" || s.risk_score > 70;
             const isSelected = selectedShipment?.id === s.id;
 
-            // Control curve mid point
             const mx = (x1 + x2) / 2;
-            const my = (y1 + y2) / 2 - 4;
+            const my = (y1 + y2) / 2 - 3;
 
             return (
-              <g key={`path-${s.id}`}>
-                <path
-                  d={`M ${x1}% ${y1}% Q ${mx}% ${my}% ${x2}% ${y2}%`}
-                  fill="none"
-                  stroke={isSelected ? "#00f2fe" : isAtRisk ? "#f43f5e" : "#10b981"}
-                  strokeWidth={isSelected ? "3" : "2"}
-                  strokeDasharray={isAtRisk ? "6 4" : "none"}
-                  opacity={isSelected ? 1 : 0.65}
-                />
-              </g>
+              <path
+                key={`p-${s.id}`}
+                d={`M ${x1}% ${y1}% Q ${mx}% ${my}% ${x2}% ${y2}%`}
+                fill="none"
+                stroke={isSelected ? "var(--accent-cyan)" : isAtRisk ? "var(--accent-rose)" : "var(--accent-emerald)"}
+                strokeWidth={isSelected ? "2.5" : "1.8"}
+                strokeDasharray={isAtRisk ? "5 3" : "none"}
+                opacity={isSelected ? 1 : 0.6}
+              />
             );
           })}
         </svg>
 
-        {/* Interactive Shipment Markers */}
+        {/* Live Shipment Marker Pins */}
         {shipments.map((s) => {
           const px = `${toX(s.current_lng)}%`;
           const py = `${toY(s.current_lat)}%`;
@@ -215,102 +201,89 @@ export default function ControlTowerMap({
                 zIndex: isSelected ? 20 : 10,
               }}
             >
-              {/* Pulsating Ping */}
+              {/* Outer Pulse Ping */}
               <div
                 style={{
-                  width: "18px",
-                  height: "18px",
+                  width: "16px",
+                  height: "16px",
                   borderRadius: "50%",
                   background: isAtRisk ? "var(--accent-rose)" : "var(--accent-emerald)",
                   border: "2px solid #ffffff",
                   boxShadow: isAtRisk
-                    ? "0 0 16px rgba(244, 63, 94, 0.9)"
-                    : "0 0 12px rgba(16, 185, 129, 0.8)",
+                    ? "0 0 12px rgba(244, 63, 94, 0.9)"
+                    : "0 0 10px rgba(16, 185, 129, 0.8)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "transform 0.2s ease",
                 }}
               >
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#fff" }} />
+                <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#fff" }} />
               </div>
 
-              {/* Tag Label */}
+              {/* Minimal Clean Tag */}
               <div
                 style={{
                   position: "absolute",
-                  top: "22px",
+                  top: "18px",
                   left: "50%",
                   transform: "translateX(-50%)",
                   whiteSpace: "nowrap",
-                  background: isSelected ? "rgba(0, 242, 254, 0.9)" : "rgba(15, 23, 42, 0.85)",
+                  background: isSelected ? "var(--accent-cyan)" : "rgba(15, 23, 42, 0.9)",
                   color: isSelected ? "#050811" : "#ffffff",
-                  padding: "2px 8px",
-                  borderRadius: "6px",
-                  fontSize: "10px",
+                  padding: "1px 6px",
+                  borderRadius: "4px",
+                  fontSize: "9px",
                   fontWeight: 600,
-                  border: isSelected ? "1px solid #00f2fe" : "1px solid rgba(255, 255, 255, 0.15)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                  border: isSelected ? "1px solid var(--accent-cyan)" : "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                {s.tracking_number.split("-")[1] || s.tracking_number} • {s.risk_score}
+                {s.tracking_number.split("-")[1]} • {s.risk_score}
               </div>
             </div>
           );
         })}
 
-        {/* Interactive Detail Drawer for Selected Shipment */}
+        {/* Selected Vehicle Float Card */}
         {selectedShipment && (
           <div
             className="glass-panel"
             style={{
               position: "absolute",
-              right: "16px",
-              bottom: "16px",
-              width: "320px",
-              padding: "16px",
+              right: "12px",
+              bottom: "12px",
+              width: "280px",
+              padding: "12px 14px",
               zIndex: 30,
-              background: "rgba(15, 23, 42, 0.92)",
+              background: "rgba(12, 18, 32, 0.95)",
               border: "1px solid var(--accent-cyan)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-              <div>
-                <span className="badge badge-cyan" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                  Selected Vehicle
-                </span>
-                <h3 style={{ fontSize: "14px", fontWeight: 700 }}>
-                  {selectedShipment.tracking_number}
-                </h3>
-              </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>
+                {selectedShipment.tracking_number}
+              </span>
               <span
                 className={`badge badge-${selectedShipment.status === "at_risk" ? "rose" : "emerald"}`}
-                style={{ fontSize: "10px" }}
+                style={{ fontSize: "9px" }}
               >
-                {selectedShipment.status.replace("_", " ")}
+                {selectedShipment.status.toUpperCase()}
               </span>
             </div>
 
-            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px", display: "grid", gap: "6px" }}>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", display: "grid", gap: "4px", marginBottom: "8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Route Corridor:</span>
-                <span style={{ color: "#fff", fontWeight: 500 }}>
-                  {selectedShipment.origin} → {selectedShipment.destination}
-                </span>
+                <span>Route:</span>
+                <span style={{ color: "#fff" }}>{selectedShipment.origin} → {selectedShipment.destination}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Carrier:</span>
-                <span style={{ color: "#fff" }}>{selectedShipment.carrier?.name || "Apex Freight"}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Cargo Value:</span>
+                <span>Cargo:</span>
                 <span style={{ color: "var(--accent-cyan)", fontWeight: 600 }}>
-                  ${(selectedShipment.cargo_value_usd || 0).toLocaleString()}
+                  {formatCurrency(selectedShipment.cargo_value_usd)}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Risk Score:</span>
-                <span style={{ color: selectedShipment.risk_score > 70 ? "var(--accent-rose)" : "#fff", fontWeight: 700 }}>
+                <span>Risk Level:</span>
+                <span style={{ color: selectedShipment.risk_score > 70 ? "var(--accent-rose)" : "var(--accent-emerald)", fontWeight: 700 }}>
                   {selectedShipment.risk_score} / 100 ({selectedShipment.risk_level.toUpperCase()})
                 </span>
               </div>
@@ -320,10 +293,10 @@ export default function ControlTowerMap({
               <button
                 onClick={() => onSimulateShipment(selectedShipment)}
                 className="btn-primary"
-                style={{ width: "100%", justifyContent: "center", fontSize: "12px", padding: "8px" }}
+                style={{ width: "100%", justifyContent: "center", fontSize: "11px", padding: "6px" }}
               >
-                <Zap size={14} />
-                <span>Simulate Alternative Corridor</span>
+                <Zap size={12} />
+                <span>Simulate Bypass Corridor</span>
               </button>
             )}
           </div>
