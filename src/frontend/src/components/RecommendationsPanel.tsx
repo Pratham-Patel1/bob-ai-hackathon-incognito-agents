@@ -17,15 +17,23 @@ import {
   X,
 } from "lucide-react";
 import { Recommendation } from "../lib/types";
-import { approveRecommendationApi, rejectRecommendationApi } from "../lib/api";
+import { approveRecommendationApi, rejectRecommendationApi, formatCurrency } from "../lib/api";
 
 interface RecommendationsPanelProps {
   recommendations: Recommendation[];
+  filterId?: string;
+  excludeId?: string;
+  hideHeader?: boolean;
+  noMargin?: boolean;
   onRecommendationUpdated?: () => void;
 }
 
 export default function RecommendationsPanel({
   recommendations,
+  filterId,
+  excludeId,
+  hideHeader = false,
+  noMargin = false,
   onRecommendationUpdated,
 }: RecommendationsPanelProps) {
   const [activeRecs, setActiveRecs] = useState<Recommendation[]>(recommendations);
@@ -39,6 +47,12 @@ export default function RecommendationsPanel({
   React.useEffect(() => {
     setActiveRecs(recommendations);
   }, [recommendations]);
+
+  const displayedRecs = activeRecs.filter((r) => {
+    if (filterId) return r.id === filterId;
+    if (excludeId) return r.id !== excludeId;
+    return true;
+  });
 
   const handleOpenModal = (rec: Recommendation, action: "approve" | "reject") => {
     setSelectedRec(rec);
@@ -81,61 +95,63 @@ export default function RecommendationsPanel({
   };
 
   return (
-    <div style={{ margin: "0 20px 20px 20px" }}>
+    <div style={{ margin: noMargin ? "0" : "0 20px 20px 20px" }}>
       {/* Header Banner */}
-      <div
-        className="glass-panel"
-        style={{
-          padding: "16px 20px",
-          marginBottom: "16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "12px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "8px",
-              background: "rgba(139, 92, 246, 0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--accent-purple)",
-            }}
-          >
-            <ShieldCheck size={20} />
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <h2 style={{ fontSize: "16px", fontWeight: 700 }}>
-                AI Recommendation Engine & Human-in-the-Loop Governance
-              </h2>
-              <span className="badge badge-purple">Decision Gate</span>
+      {!hideHeader && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "16px 20px",
+            marginBottom: "16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                background: "rgba(139, 92, 246, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent-purple)",
+              }}
+            >
+              <ShieldCheck size={20} />
             </div>
-            <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-              Multi-objective intelligence synthesizing optimal corridors with mandatory human oversight
-            </p>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <h2 style={{ fontSize: "16px", fontWeight: 700 }}>
+                  AI Recommendation Engine & Human-in-the-Loop Governance
+                </h2>
+                <span className="badge badge-purple">Decision Gate</span>
+              </div>
+              <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                Multi-objective intelligence synthesizing optimal corridors with mandatory human oversight
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <span className="badge badge-emerald">
+              {activeRecs.filter((r) => r.status === "approved").length} Approved
+            </span>
+            <span className="badge badge-rose">
+              {activeRecs.filter((r) => r.status === "pending").length} Pending Review
+            </span>
           </div>
         </div>
-
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span className="badge badge-emerald">
-            {activeRecs.filter((r) => r.status === "approved").length} Approved
-          </span>
-          <span className="badge badge-rose">
-            {activeRecs.filter((r) => r.status === "pending").length} Pending Review
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Recommendations Feed */}
       <div style={{ display: "grid", gap: "14px" }}>
-        {activeRecs.map((rec) => {
+        {displayedRecs.map((rec) => {
           const isPending = rec.status === "pending";
           const isApproved = rec.status === "approved";
           const isCritical = rec.priority === "critical";
@@ -192,7 +208,7 @@ export default function RecommendationsPanel({
                   {rec.estimated_savings_usd && (
                     <div>
                       <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--accent-emerald)" }}>
-                        ${rec.estimated_savings_usd.toLocaleString()}
+                        {formatCurrency(rec.estimated_savings_usd)}
                       </div>
                       <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>SLA Savings</div>
                     </div>

@@ -141,13 +141,13 @@ export default function ControlTowerHome() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.6fr 1fr",
+            gridTemplateColumns: "1.5fr 1fr",
             gap: "16px",
             margin: "0 20px",
           }}
         >
-          {/* Left Column: Digital Twin Map */}
-          <div>
+          {/* Left Column: Digital Twin Map + Carrier Swap Panel Below It */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <ControlTowerMap
               shipments={shipments}
               disruptions={disruptions}
@@ -155,13 +155,30 @@ export default function ControlTowerHome() {
               onSelectShipment={setSelectedShipment}
               onSimulateShipment={handleSimulateFromMap}
             />
-          </div>
 
-          {/* Right Column: AI Action Gate & Approvals */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* Carrier Swap Panel filling the empty section below the Map */}
             <RecommendationsPanel
               recommendations={recommendations}
+              filterId="rec-02"
+              hideHeader={true}
+              noMargin={true}
               onRecommendationUpdated={loadData}
+            />
+          </div>
+
+          {/* Right Column: Pharma Reroute Action & Cold Chain Monitor */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <RecommendationsPanel
+              recommendations={recommendations}
+              filterId="rec-01"
+              hideHeader={true}
+              noMargin={true}
+              onRecommendationUpdated={loadData}
+            />
+
+            <ColdChainMonitor
+              shipments={shipments}
+              onTriggerReeferSwap={() => setActiveTab("recommendations")}
             />
           </div>
         </div>
