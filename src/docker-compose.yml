@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: supplychainOS
+      POSTGRES_USER: supplychainOS
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supplychainOS -d supplychainOS"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://supplychainOS:password@db:5432/supplychainOS
+      APP_PORT: "8000"
+      APP_ENV: development
+      LOG_LEVEL: INFO
+      CORS_ORIGINS: "http://localhost:3000"
+      APPROVAL_THRESHOLD_USD: "50000"
+      SLA_BUFFER_HOURS: "4"
+      DAILY_HOLDING_COST_RATE: "0.002"
+      DEFAULT_SLA_PENALTY_USD: "5000"
+      ML_DETERMINISTIC_WEIGHT: "0.6"
+      ML_PREDICTIVE_WEIGHT: "0.4"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source for live reload during development
+      - ./backend:/app/backend
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
