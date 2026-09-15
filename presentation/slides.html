@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupplyChainOS — IBM Bob AI Hackathon 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --primary: #0f62fe;
+    --primary-dark: #0043ce;
+    --accent: #42be65;
+    --warning: #f1c21b;
+    --danger: #da1e28;
+    --bg-dark: #161616;
+    --bg-card: #262626;
+    --bg-card2: #393939;
+    --text: #f4f4f4;
+    --text-muted: #8d8d8d;
+    --border: #525252;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .presentation {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; flex-direction: column; }
+
+  /* Slide backgrounds */
+  .slide-cover { background: linear-gradient(135deg, #0a0a0a 0%, #161616 40%, #0f3460 100%); }
+  .slide-problem { background: linear-gradient(135deg, #161616 0%, #1a0a0a 60%, #2a0a0a 100%); }
+  .slide-solution { background: linear-gradient(135deg, #0a1628 0%, #161616 50%, #0a2818 100%); }
+  .slide-arch { background: #0d1117; }
+  .slide-ai { background: linear-gradient(135deg, #0a0a1a 0%, #161616 60%, #1a0a2a 100%); }
+  .slide-twin { background: linear-gradient(135deg, #0a1a1a 0%, #161616 60%, #0a2020 100%); }
+  .slide-human { background: linear-gradient(135deg, #1a1a0a 0%, #161616 60%, #2a1a0a 100%); }
+  .slide-impact { background: linear-gradient(135deg, #0a0a0a 0%, #161616 40%, #0f3460 100%); }
+
+  /* Decorative glow */
+  .slide::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    opacity: 0.04;
+    background: var(--primary);
+    top: -200px;
+    right: -200px;
+    pointer-events: none;
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(38,38,38,0.95);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 10px 24px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav button:hover { background: var(--primary-dark); transform: scale(1.05); }
+  .nav button:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+  #slide-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 60px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* Typography */
+  .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 16px;
+  }
+
+  h1 { font-size: 56px; font-weight: 800; line-height: 1.05; margin-bottom: 24px; }
+  h2 { font-size: 42px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+  h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+
+  .subtitle { font-size: 20px; color: var(--text-muted); line-height: 1.5; max-width: 700px; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .card-2 { grid-template-columns: 1fr 1fr; }
+  .card-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  /* Highlight colors */
+  .hl-red { color: #ff8389; }
+  .hl-green { color: #42be65; }
+  .hl-blue { color: #78a9ff; }
+  .hl-yellow { color: #f1c21b; }
+  .hl-purple { color: #be95ff; }
+  .hl-cyan { color: #3ddbd9; }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 3px;
+  }
+
+  .tag-blue { background: rgba(15,98,254,0.2); color: #78a9ff; border: 1px solid rgba(120,169,255,0.3); }
+  .tag-green { background: rgba(66,190,101,0.15); color: #42be65; border: 1px solid rgba(66,190,101,0.3); }
+  .tag-purple { background: rgba(190,149,255,0.15); color: #be95ff; border: 1px solid rgba(190,149,255,0.3); }
+
+  /* Stats */
+  .stat {
+    text-align: center;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .stat-number {
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--primary), #78a9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--primary);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* List */
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .feature-list li .icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Architecture box */
+  .arch-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .arch-arrow {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 20px;
+    margin: 4px 0;
+  }
+
+  /* Cover specific */
+  .team-badges {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .team-badge {
+    background: rgba(15,98,254,0.15);
+    border: 1px solid rgba(15,98,254,0.3);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  .team-badge .name { font-weight: 700; font-size: 14px; }
+  .team-badge .role { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #78a9ff, #42be65, #f1c21b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-accent { border-left: 4px solid var(--primary); padding-left: 16px; }
+
+  /* Print */
+  @media print {
+    body { overflow: visible; }
+    .presentation { overflow: visible; width: 1280px; }
+    .slide { display: flex !important; page-break-after: always; height: 720px; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="presentation">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide slide-cover active" id="s1">
+    <div class="label">IBM Bob AI Hackathon 2026 · Track: AI</div>
+    <h1>SupplyChain<span class="gradient-text">OS</span></h1>
+    <p class="subtitle">AI-Powered Supply Chain Resilience & Digital Twin Control Tower</p>
+    <div style="margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap;">
+      <span class="tag tag-blue">🤖 ML Risk Scoring</span>
+      <span class="tag tag-green">🌐 Digital Twin</span>
+      <span class="tag tag-purple">👤 Human-in-the-Loop</span>
+      <span class="tag tag-blue">🔍 Explainable AI</span>
+      <span class="tag tag-green">💬 Bob Copilot (MCP)</span>
+      <span class="tag tag-purple">📋 Audit Trail</span>
+    </div>
+    <div class="team-badges">
+      <div class="team-badge">
+        <div class="name">Mitesh Sunil Patil</div>
+        <div class="role">Team Lead · Member 4</div>
+      </div>
+      <div class="team-badge">
+        <div class="name">Jay Shirishbhai Patel</div>
+        <div class="role">Member 1 · Backend Architecture</div>
+      </div>
+      <div class="team-badge">
+        <div class="name">Nilay Rajeshbhai Patel</div>
+        <div class="role">Member 2 · AI/ML Engines</div>
+      </div>
+      <div class="team-badge">
+        <div class="name">Pratham Shaileshbhai Patel</div>
+        <div class="role">Member 3 · Frontend & Integration</div>
+      </div>
+    </div>
+    <div style="position: absolute; bottom: 80px; right: 80px; text-align: right;">
+      <div style="font-size: 13px; color: var(--text-muted);">Team: <strong>Incognito Agents</strong></div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">195 tests passing · 35+ API endpoints</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide slide-problem" id="s2">
+    <div class="label">Slide 2 of 8 · The Problem</div>
+    <h2>Supply Chain Disruptions Are <span class="hl-red">Invisible Until It's Too Late</span></h2>
+    <div class="card-grid card-3" style="margin-top: 24px;">
+      <div class="card">
+        <div style="font-size: 36px; margin-bottom: 12px;">⛈️</div>
+        <h3 class="hl-red">Cascading Chaos</h3>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">A port strike affects 1 route — but cascades to 200+ active shipments invisibly. Manual tracking fails in minutes.</p>
+      </div>
+      <div class="card">
+        <div style="font-size: 36px; margin-bottom: 12px;">🧊</div>
+        <h3 class="hl-yellow">Cold Chain Blindness</h3>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">Temperature excursions in vaccines & pharmaceuticals are only discovered at delivery — <strong>$500K+ in cargo lost</strong>.</p>
+      </div>
+      <div class="card">
+        <div style="font-size: 36px; margin-bottom: 12px;">🚛</div>
+        <h3 class="hl-blue">Stranded Fleet Assets</h3>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">Trucks sit idle in one region while other routes are overloaded — no intelligence connecting supply to demand.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 16px; display: flex; gap: 32px; align-items: center;">
+      <div style="flex: 1;">
+        <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted);">
+          <strong style="color: var(--text);">Operations managers</strong> track 200+ live shipments across global routes using spreadsheets and reactive alerts.
+          By the time a crisis is visible, SLA penalties are already accruing, cold-chain integrity is compromised,
+          and manual rerouting decisions take hours — not minutes.
+        </p>
+      </div>
+      <div style="text-align: center; padding: 0 24px;">
+        <div style="font-size: 48px; font-weight: 900; color: #da1e28;">$4.4T</div>
+        <div style="font-size: 13px; color: var(--text-muted);">Annual supply chain<br>disruption cost globally</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide slide-solution" id="s3">
+    <div class="label">Slide 3 of 8 · Our Solution</div>
+    <h2>SupplyChainOS: <span class="hl-green">See Everything. Decide Confidently. Act Safely.</span></h2>
+    <div class="card-grid card-2" style="margin-top: 20px;">
+      <div>
+        <ul class="feature-list">
+          <li><span class="icon">🔍</span><div><strong>Disruption Intelligence</strong> — Real-time geographic + route matching across all active shipments</div></li>
+          <li><span class="icon">🧠</span><div><strong>AI Risk Scoring</strong> — Deterministic rules + RandomForest ML predict delay probability with explainable factors</div></li>
+          <li><span class="icon">🧊</span><div><strong>Cold Chain Monitor</strong> — Live temperature telemetry with excursion alerts before delivery failure</div></li>
+          <li><span class="icon">🚛</span><div><strong>Fleet Intelligence</strong> — Idle asset identification + redeployment distance scoring</div></li>
+          <li><span class="icon">🗺️</span><div><strong>Route Optimization</strong> — Haversine-based alternative route scoring around disruption zones</div></li>
+          <li><span class="icon">🏢</span><div><strong>Carrier Recommendation</strong> — Cost + reliability + capacity scoring across carrier graph</div></li>
+        </ul>
+      </div>
+      <div>
+        <ul class="feature-list">
+          <li><span class="icon">🌐</span><div><strong>Digital Twin</strong> — In-memory what-if simulation; zero impact on operational state</div></li>
+          <li><span class="icon">📊</span><div><strong>Business Impact</strong> — SLA penalty, holding cost, cargo value at risk in real $</div></li>
+          <li><span class="icon">⚡</span><div><strong>Recommendation Engine</strong> — Prioritized, explainable actions with reasoning factors</div></li>
+          <li><span class="icon">👤</span><div><strong>Human Approval Gate</strong> — No AI executes high-value decisions autonomously</div></li>
+          <li><span class="icon">📋</span><div><strong>Immutable Audit Trail</strong> — Every AI decision and human action recorded</div></li>
+          <li><span class="icon">💬</span><div><strong>Bob Copilot (MCP)</strong> — Natural-language queries → structured MCP tool calls → live data</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: ARCHITECTURE -->
+  <div class="slide slide-arch" id="s4">
+    <div class="label">Slide 4 of 8 · System Architecture</div>
+    <h2>Clean Layered Architecture — <span class="hl-blue">No Framework Lock-in</span></h2>
+    <div style="display: flex; gap: 24px; margin-top: 20px; flex: 1;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+        <div class="arch-box" style="background: rgba(15,98,254,0.1); border-color: rgba(15,98,254,0.4); color: #78a9ff;">
+          🌐 Next.js 14 Control Tower (App Router · Leaflet · Recharts)
+        </div>
+        <div class="arch-arrow">↕ REST API /api/v1/*</div>
+        <div class="arch-box" style="background: rgba(66,190,101,0.1); border-color: rgba(66,190,101,0.4); color: #42be65;">
+          ⚡ FastAPI Backend (35+ endpoints · Pydantic v2 · Async SQLAlchemy)
+        </div>
+        <div class="arch-arrow">↕ plain dicts (no ORM in engines)</div>
+        <div class="arch-box" style="background: rgba(190,149,255,0.1); border-color: rgba(190,149,255,0.4); color: #be95ff; font-size: 12px;">
+          🧠 11 Pure Python Engines: DisruptionImpact · ShipmentRisk · PredictiveRisk · ColdChain · FleetIntelligence · RouteOptimizer · CarrierRecommender · CascadeImpact · BusinessImpact · RecommendationEngine · DigitalTwin
+        </div>
+        <div class="arch-arrow">↕ async queries</div>
+        <div class="arch-box" style="background: rgba(241,194,27,0.1); border-color: rgba(241,194,27,0.4); color: #f1c21b;">
+          🗄️ PostgreSQL 16 (shipments · disruptions · fleet · carriers · routes · temp_logs · recommendations · audit)
+        </div>
+      </div>
+      <div style="width: 260px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">MCP / Copilot Layer</div>
+          <div style="font-size: 13px; line-height: 1.6;">
+            💬 Bob Copilot<br>
+            ↓ JSON-RPC<br>
+            🔗 MCP Server (local)<br>
+            ↓ Auth REST<br>
+            ⚡ FastAPI Backend
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Key Invariant</div>
+          <p style="font-size: 13px; color: #42be65; line-height: 1.6;">Engines have ZERO DB dependencies — pure Python math, testable in isolation</p>
+        </div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Infrastructure</div>
+          <div style="font-size: 13px; line-height: 1.6;">🐳 Docker Compose<br>📊 195 pytest tests<br>✅ 0 TypeScript errors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: AI/ML -->
+  <div class="slide slide-ai" id="s5">
+    <div class="label">Slide 5 of 8 · AI/ML Intelligence</div>
+    <h2>Two-Layer Risk Intelligence: <span class="hl-purple">Deterministic + ML</span></h2>
+    <div class="card-grid card-2" style="margin-top: 20px;">
+      <div class="card" style="border-color: rgba(190,149,255,0.4);">
+        <div class="label" style="color: #be95ff;">Deterministic Engine</div>
+        <h3>Rule-Based Multi-Factor Scoring</h3>
+        <ul style="list-style: none; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <li style="font-size: 13px; color: var(--text-muted);">📍 Geographic proximity to disruption zone</li>
+          <li style="font-size: 13px; color: var(--text-muted);">⏱️ SLA time remaining vs estimated delay</li>
+          <li style="font-size: 13px; color: var(--text-muted);">🌡️ Cold chain sensitivity + excursion history</li>
+          <li style="font-size: 13px; color: var(--text-muted);">🚢 Carrier reliability historical score</li>
+          <li style="font-size: 13px; color: var(--text-muted);">🗺️ Route overlap with disruption polygon</li>
+          <li style="font-size: 13px; color: var(--text-muted);">💰 Cargo value at risk (SLA penalty estimate)</li>
+        </ul>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(190,149,255,0.08); border-radius: 8px;">
+          <div style="font-size: 12px; color: #be95ff; font-weight: 700;">Output: risk_score ∈ [0.0, 1.0]</div>
+        </div>
+      </div>
+      <div class="card" style="border-color: rgba(66,190,101,0.4);">
+        <div class="label" style="color: #42be65;">ML Prediction Engine</div>
+        <h3>RandomForest Delay Predictor</h3>
+        <ul style="list-style: none; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <li style="font-size: 13px; color: var(--text-muted);">🌲 scikit-learn RandomForestClassifier</li>
+          <li style="font-size: 13px; color: var(--text-muted);">📦 Features: 12 supply chain risk indicators</li>
+          <li style="font-size: 13px; color: var(--text-muted);">🎯 Output: delay_probability ∈ [0.0, 1.0]</li>
+          <li style="font-size: 13px; color: var(--text-muted);">🔍 Feature importance → reasoning factors</li>
+          <li style="font-size: 13px; color: var(--text-muted);">📊 Trained on synthetic supply-chain dataset</li>
+          <li style="font-size: 13px; color: var(--text-muted);">⚡ In-process inference (no external API)</li>
+        </ul>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(66,190,101,0.08); border-radius: 8px;">
+          <div style="font-size: 12px; color: #42be65; font-weight: 700;">Output: delay_probability + top factors</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 16px; display: flex; align-items: center; gap: 24px;">
+      <div style="flex: 1;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #78a9ff;">Explainable AI Output (per shipment)</div>
+        <div style="font-family: monospace; font-size: 12px; color: var(--text-muted); line-height: 1.8;">
+          reasoning_factors: [{factor: "port_congestion_index", weight: 0.91},<br>
+          &nbsp;&nbsp;{factor: "sla_hours_remaining", weight: 0.78},<br>
+          &nbsp;&nbsp;{factor: "cold_chain_sensitivity", weight: 0.65}, ...]
+        </div>
+      </div>
+      <div style="text-align: center; min-width: 140px;">
+        <div style="font-size: 42px; font-weight: 900; color: #be95ff;">195</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Tests passing<br>0 failures</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: DIGITAL TWIN -->
+  <div class="slide slide-twin" id="s6">
+    <div class="label">Slide 6 of 8 · Digital Twin + Optimization</div>
+    <h2>Digital Twin: <span class="hl-cyan">Simulate Before You Act</span></h2>
+    <div style="display: flex; gap: 20px; margin-top: 20px; flex: 1;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <div class="card" style="border-color: rgba(61,219,217,0.3);">
+          <div class="label" style="color: #3ddbd9;">Digital Twin Engine</div>
+          <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px;">
+            Pure in-memory simulation — operator configures a scenario (disruption severity, affected routes, carrier changes), the engine runs the full risk + impact pipeline on cloned data, then returns baseline vs simulated comparison.
+          </p>
+          <div style="font-size: 13px; color: #3ddbd9; font-weight: 600;">⚠️ Clearly marked HYPOTHETICAL — zero DB mutations</div>
+        </div>
+        <div class="card">
+          <div class="label">Cascade Impact Analysis</div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">2nd-order cascade: disruption → affected shipments → fleet resource contention → carrier capacity pressure → financial exposure chain</p>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <div class="card-grid card-2">
+          <div class="card" style="border-color: rgba(66,190,101,0.3);">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">ROUTE OPTIMIZATION</div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">Haversine scoring of alternative routes · delay delta comparison · disruption zone avoidance</div>
+          </div>
+          <div class="card" style="border-color: rgba(190,149,255,0.3);">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">CARRIER RECOMMENDER</div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">Reliability × capacity × cost composite score · ranked alternatives</div>
+          </div>
+          <div class="card" style="border-color: rgba(241,194,27,0.3);">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">FLEET INTELLIGENCE</div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">Idle asset detection · redeployment distance · overload identification</div>
+          </div>
+          <div class="card" style="border-color: rgba(255,131,137,0.3);">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">BUSINESS IMPACT</div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">SLA penalty $ · holding costs · cargo value at risk · ROI of action</div>
+          </div>
+        </div>
+        <div class="card" style="background: rgba(61,219,217,0.06); border-color: rgba(61,219,217,0.3);">
+          <div style="display: flex; justify-content: space-between; gap: 24px;">
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: 800; color: #3ddbd9;">200</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Active shipments</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: 800; color: #f1c21b;">3</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Live disruptions</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: 800; color: #42be65;">11</div>
+              <div style="font-size: 11px; color: var(--text-muted);">AI engines</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: 800; color: #be95ff;">35+</div>
+              <div style="font-size: 11px; color: var(--text-muted);">API endpoints</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: HUMAN APPROVAL + COPILOT -->
+  <div class="slide slide-human" id="s7">
+    <div class="label">Slide 7 of 8 · Human Approval + Explainable AI + Bob Copilot</div>
+    <h2>Governed AI: <span class="hl-yellow">Human Authority, AI Intelligence</span></h2>
+    <div class="card-grid card-3" style="margin-top: 20px;">
+      <div class="card" style="border-color: rgba(241,194,27,0.4);">
+        <div class="label" style="color: #f1c21b;">Human-in-the-Loop</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6;">5-state recommendation lifecycle with mandatory human approval gate for high-value / critical decisions</div>
+        <div class="flow" style="flex-direction: column; gap: 6px;">
+          <div class="flow-step" style="font-size: 12px;">PENDING</div>
+          <div style="color: var(--text-muted); font-size: 16px;">↓</div>
+          <div class="flow-step" style="font-size: 12px; border-color: rgba(241,194,27,0.5);">AWAITING APPROVAL ⚠️</div>
+          <div style="color: var(--text-muted); font-size: 16px;">↓</div>
+          <div class="flow-step" style="font-size: 12px; border-color: rgba(66,190,101,0.5); color: #42be65;">APPROVED ✓</div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #f1c21b;">Actor name + timestamp recorded for every decision</div>
+      </div>
+      <div class="card" style="border-color: rgba(190,149,255,0.4);">
+        <div class="label" style="color: #be95ff;">Explainable AI</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6;">Every recommendation includes structured reasoning factors — not a black box</div>
+        <div style="font-family: monospace; font-size: 11px; color: var(--text-muted); line-height: 2; background: rgba(190,149,255,0.05); padding: 10px; border-radius: 6px;">
+          ✦ port_congestion: 0.91<br>
+          ✦ sla_exposure_usd: $42K<br>
+          ✦ cold_chain_risk: HIGH<br>
+          ✦ carrier_reliability: 0.94<br>
+          ✦ delay_probability: 78%
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #be95ff;">Ordered by contribution weight</div>
+      </div>
+      <div class="card" style="border-color: rgba(120,169,255,0.4);">
+        <div class="label" style="color: #78a9ff;">Bob Copilot (MCP)</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6;">Natural-language interface powered by local MCP server — no hallucination, all answers grounded in live data</div>
+        <div style="background: rgba(15,98,254,0.08); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.8;">
+          <div style="color: #78a9ff;">👤 "Which shipments are at risk?"</div>
+          <div style="color: var(--text-muted); margin-top: 6px;">↓ MCP tool: get_high_risk_shipments</div>
+          <div style="color: var(--text-muted);">↓ FastAPI → live DB query</div>
+          <div style="color: #42be65; margin-top: 6px;">💬 Structured explainable response</div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: #78a9ff;">Cannot approve autonomously · Cannot exec SQL</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 16px;">
+      <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #f1c21b;">Immutable Audit Trail</div>
+      <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">Every AI recommendation generation, human approval/rejection, and Copilot query is recorded in <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">decision_audits</code> table — read-only, append-only, with actor + timestamp + outcome for full governance compliance.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: BUSINESS IMPACT -->
+  <div class="slide slide-impact" id="s8">
+    <div class="label">Slide 8 of 8 · Business Impact + Demo + Conclusion</div>
+    <h2>From Crisis to <span class="hl-green">Managed Event</span> in Minutes</h2>
+    <div class="card-grid card-4" style="margin-top: 20px;">
+      <div class="stat">
+        <div class="stat-number">$500K+</div>
+        <div class="stat-label">Cold chain cargo loss prevented per excursion detected early</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">72h→8h</div>
+        <div class="stat-label">Delay reduction via AI route recommendation</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">200</div>
+        <div class="stat-label">Shipments monitored with zero manual tracking</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">AI decisions governed by human approval + audit</div>
+      </div>
+    </div>
+    <div class="card-grid card-2" style="margin-top: 16px;">
+      <div class="card">
+        <div class="label">Demo Highlights</div>
+        <ul class="feature-list" style="font-size: 13px;">
+          <li><span class="icon">🔴</span> Live disruption → instant cascade impact scoring</li>
+          <li><span class="icon">🧊</span> Cold chain breach caught 47 min early</li>
+          <li><span class="icon">🌐</span> Digital Twin: 2× scenario shows $180K additional exposure</li>
+          <li><span class="icon">👤</span> Supervisor approves recommendation → audit trail entry</li>
+          <li><span class="icon">💬</span> Bob Copilot: natural query → MCP → live answer</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="label">Why SupplyChainOS Wins</div>
+        <ul class="feature-list" style="font-size: 13px;">
+          <li><span class="icon">✅</span> <strong>Complete</strong>: 11 engines, 35+ APIs, full UI</li>
+          <li><span class="icon">✅</span> <strong>Verified</strong>: 195 tests passing, 0 failures</li>
+          <li><span class="icon">✅</span> <strong>Governed</strong>: Human approval + immutable audit</li>
+          <li><span class="icon">✅</span> <strong>Explainable</strong>: Every AI decision has reasoning factors</li>
+          <li><span class="icon">✅</span> <strong>Safe</strong>: Digital Twin never mutates operational data</li>
+        </ul>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; padding: 16px; background: rgba(15,98,254,0.1); border: 1px solid rgba(15,98,254,0.3); border-radius: 12px;">
+      <p style="font-size: 16px; color: #78a9ff; font-weight: 600;">
+        🚀 SupplyChainOS — Turning supply chain disruptions from crises into managed events
+      </p>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
+        Run locally: <code>cd src && docker compose up --build</code> · Frontend: http://localhost:3000 · API: http://localhost:8000
+      </p>
+    </div>
+  </div>
+
+</div><!-- end presentation -->
+
+<!-- Navigation -->
+<div class="nav">
+  <button id="btn-prev" onclick="changeSlide(-1)" disabled>← Prev</button>
+  <span id="slide-counter">1 / 8</span>
+  <button id="btn-next" onclick="changeSlide(1)">Next →</button>
+  <button onclick="window.print()" style="background: var(--bg-card2); margin-left: 16px;">🖨️ Print PDF</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 8;
+
+  function changeSlide(dir) {
+    document.getElementById('s' + current).classList.remove('active');
+    current = Math.max(1, Math.min(total, current + dir));
+    document.getElementById('s' + current).classList.add('active');
+    document.getElementById('slide-counter').textContent = current + ' / ' + total;
+    document.getElementById('btn-prev').disabled = current === 1;
+    document.getElementById('btn-next').disabled = current === total;
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  });
+</script>
+</body>
+</html>

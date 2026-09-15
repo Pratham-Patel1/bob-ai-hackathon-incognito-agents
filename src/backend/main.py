@@ -25,6 +25,7 @@ from backend.routers.recommendations import router as recommendations_router
 from backend.routers.simulation import router as simulation_router
 from backend.routers.audit import router as audit_router
 from backend.routers.reference import carriers_router, routes_router
+from backend.routers.copilot import router as copilot_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -108,6 +109,7 @@ def create_app() -> FastAPI:
     app.include_router(audit_router, prefix=PREFIX)
     app.include_router(carriers_router, prefix=PREFIX)
     app.include_router(routes_router, prefix=PREFIX)
+    app.include_router(copilot_router, prefix=PREFIX)
 
     @app.get("/")
     async def root() -> dict:
